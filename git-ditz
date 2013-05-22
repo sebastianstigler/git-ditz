@@ -103,15 +103,12 @@ else
 fi
 
 echo ">> $DITZ $COMMAND $@"
-TMP=`mktemp`
 
 ## this allows to simultaneously display text for input
 ## and capture the output in a temporary file
-{
 	 $DITZ $COMMAND $@
-} | tee $TMP
-
-MODIFIED=`cat $TMP | grep yaml`
+$GIT add bugs
+MODIFIED=`$GIT status | grep yaml | cut -c2- | cut -d":" -f2`
 
 if `test x"$AUTOCOMMIT" != x""`; then
 	 if `test x"$MODIFIED" != x""`; then 
