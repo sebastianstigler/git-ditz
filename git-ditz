@@ -5,15 +5,16 @@
 # The following git-variables can be set:
 #   ditz.branch - name of the branch where the ditz-issues are located
 #   ditz.executable - path to the ditz-executable to use
-#   ditz.post-hook - string that is eval'ed after running ditz with all 
+#   ditz.post-hook - string that is eval'ed after running ditz with all
 #                    commands
 #   ditz.post-<command>-hook - string that is evaled after running ditz
 #                              with command <command>
 #   ditz.auto-commit - if set, automatically commit changes
 #                      made to the ditz files by ditz
 #   ditz.auto-commit-message - if set, use this message for auto commits
-#   ditz.post-commit-hook - string that is eval'ed after automatically 
+#   ditz.post-commit-hook - string that is eval'ed after automatically
 #                    committing (needs to be enabled)
+#   ditz.central-repo - path to the repo which contains the ditz.branch
 #
 usage(){
 	 echo "Usage: $0 <ditz-command> <ditz-parameters>";
@@ -61,6 +62,20 @@ if [[ $? = 2 ]] ; then
 	 echo "Sorry, you need git >= $GITVERSION_REQUIRE, you got $GITVERSION"
 	 exit
 fi
+
+DITZCENTRALREPO=`$GIT config --get ditz.central-repo`
+( # invoke subshell to savely change the directory without external influence
+if [ "x${DITZCENTRALREPO}x" != "xx" ]; then
+	if [ -d "${DITZCENTRALREPO}/.git" ]; then
+		echo ">> Using ditz-central-repo at '${DITZCENTRALREPO}'"
+		cd ${DITZCENTRALREPO}
+	else
+		echo ">> ditz-central-repo at '${DITZCENTRALREPO}' is not a git repository"
+		echo "abbort execution"
+		exit 1
+	fi
+fi
+
 
 DITZ=ditz
 GITDITZ=`$GIT config --get ditz.executable`
@@ -111,8 +126,8 @@ $GIT add bugs
 MODIFIED=`$GIT status | grep yaml | cut -c2- | cut -d":" -f2`
 
 if `test x"$AUTOCOMMIT" != x""`; then
-	 if `test x"$MODIFIED" != x""`; then 
-		  echo ">> automatically committing"	 
+	 if `test x"$MODIFIED" != x""`; then
+		  echo ">> automatically committing"
 		  for f in $MODIFIED; do
 				echo "  >> adding $f"
 				$GIT add $f
@@ -142,4 +157,4 @@ if `test x$BRANCH != x""`; then
 		  $GIT stash pop --quiet
 	 fi
 fi
- 
+)
